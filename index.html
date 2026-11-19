@@ -93,9 +93,16 @@
   .step .t{font-size:13.5px;line-height:1.75;color:var(--ink-2)}
   .step .t b{display:block;margin-bottom:1px;font-size:14px;font-weight:500;color:var(--ink)}
   .sub-h{margin:22px 0 10px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.06em;color:var(--ink-3)}
-  .mini{margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:var(--ink-2)}
-  .mini li{margin-bottom:2px}
-  .mini code{font-family:var(--mono);font-size:11.5px;background:#F7F6F3;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#4E4D48}
+  .prompt-mini{
+    margin:0;padding:14px 16px;max-height:200px;overflow:auto;
+    background:var(--code-bg);border:1px solid var(--line);border-radius:12px;
+    font-family:var(--mono);font-size:11.5px;line-height:1.9;color:#4E4D48;
+    white-space:pre-wrap;word-break:break-word;
+    scrollbar-width:thin;scrollbar-color:#D8D7D1 transparent;
+  }
+  .prompt-mini::-webkit-scrollbar{width:6px}
+  .prompt-mini::-webkit-scrollbar-thumb{background:#DEDDD7;border-radius:3px}
+  .btn-sm{margin-top:12px;height:42px;font-size:13.5px;padding:0 20px}
   .sheet .note{margin:20px 0 0;font-size:11.5px;color:#B4B3AC}
   .close{
     position:absolute;top:14px;right:14px;width:30px;height:30px;
@@ -150,7 +157,7 @@ https://github.com/Ljh15224052032/zjutai-brand
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="editTitle">
     <button class="close" data-close aria-label="关闭">×</button>
     <h2 id="editTitle">想改这个站</h2>
-    <p class="lead">三步，全程在浏览器里，不用装 Git。</p>
+    <p class="lead">你不用动手改文件。把下面这段交给你的 AI，它来改、来提交。</p>
 
     <div class="step">
       <span class="n">01</span>
@@ -158,20 +165,32 @@ https://github.com/Ljh15224052032/zjutai-brand
     </div>
     <div class="step">
       <span class="n">02</span>
-      <div class="t"><b>修改</b>在网页上改完，提一个 PR；Cloudflare 会给这个 PR 生成预览地址。</div>
+      <div class="t"><b>交给 AI</b>复制下面的提示词，补上你要改什么，发给你常用的 AI。</div>
     </div>
     <div class="step">
       <span class="n">03</span>
-      <div class="t"><b>上线</b>把预览地址发回群里，负责人点 Approve，一分钟内自动发布。</div>
+      <div class="t"><b>上线</b>AI 会推一个 PR；把预览地址发回群里，负责人点 Approve，一分钟内自动发布。</div>
     </div>
 
-    <div class="sub-h">具体怎么点</div>
-    <ol class="mini">
-      <li>仓库里打开 <code>index.html</code>，点右上角铅笔图标。</li>
-      <li>改完拉到最下面，选 <code>Create a new branch for this commit</code>，点 Propose changes。</li>
-      <li>下一屏点 <code>Create pull request</code>。</li>
-      <li>等一两分钟，PR 页面里会挂出预览地址，复制它发群里。</li>
-    </ol>
+    <div class="sub-h">改站提示词</div>
+    <pre class="prompt-mini" id="editPrompt">帮我改 ZJUT AI 宣传部的网站。
+
+仓库：https://github.com/Ljh15224052032/zjutai-workbench
+线上：https://brand.zjutai.cn
+
+动手前先读仓库的 README.md 和 CONTRIBUTING.md。
+
+要求：
+1. 从 main 拉新分支改，不要直接推 main，也不要合并 PR。
+2. 只改我指定要改的地方，别顺手改格式、改文案、动其他文件。
+3. 素材只用 https://github.com/Ljh15224052032/zjutai-brand 里的，按它的 guidelines.md 来；不要自己画图、改品牌色。
+4. 这是单文件静态站，零依赖零构建，不要引入框架、CDN 或构建步骤。
+5. 改完自己打开看一遍，提交并推分支，开一个 PR：标题一句话说清改了什么，描述里写「改了什么 / 为什么 / 有没有动别处」。
+6. 把预览地址发给我，不要自己合并。
+
+这次要改的是：
+（在这里写你要改的内容）</pre>
+    <button class="btn-main btn-sm" id="editCopyBtn">复制这段提示词</button>
 
     <p class="note">完整规矩写在仓库的 CONTRIBUTING.md。</p>
   </div>
@@ -179,13 +198,8 @@ https://github.com/Ljh15224052032/zjutai-brand
 
 <script>
 (function () {
-  /* ---- 复制提示词 ---- */
-  var btn = document.getElementById('copyBtn');
-  var src = document.getElementById('prompt');
-  var text = src.textContent.trim();
-  var timer = null;
-
-  function fallback() {
+  /* ---- 复制 ---- */
+  function fallback(text) {
     var ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
@@ -198,23 +212,33 @@ https://github.com/Ljh15224052032/zjutai-brand
     return ok;
   }
 
-  function done(ok) {
-    clearTimeout(timer);
-    btn.textContent = ok ? '已复制' : '复制失败，请手动选中';
-    btn.classList.add('done');
-    timer = setTimeout(function () {
-      btn.textContent = '复制提示词';
-      btn.classList.remove('done');
-    }, 2200);
+  function copyText(text) {
+    return new Promise(function (resolve) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () { resolve(true); }, function () { resolve(fallback(text)); });
+      } else {
+        resolve(fallback(text));
+      }
+    });
   }
 
-  btn.addEventListener('click', function () {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallback()); });
-    } else {
-      done(fallback());
-    }
-  });
+  function bindCopy(button, sourceId, idle) {
+    button.addEventListener('click', function () {
+      var text = document.getElementById(sourceId).textContent.trim();
+      copyText(text).then(function (ok) {
+        clearTimeout(button._t);
+        button.textContent = ok ? '已复制' : '复制失败，请手动选中';
+        button.classList.add('done');
+        button._t = setTimeout(function () {
+          button.textContent = idle;
+          button.classList.remove('done');
+        }, 2200);
+      });
+    });
+  }
+
+  bindCopy(document.getElementById('copyBtn'), 'prompt', '复制提示词');
+  bindCopy(document.getElementById('editCopyBtn'), 'editPrompt', '复制这段提示词');
 
   /* ---- 弹窗 ---- */
   var modal = document.getElementById('editModal');
