@@ -92,6 +92,10 @@
   .step .n{flex:none;width:20px;padding-top:3px;font-family:var(--mono);font-size:11px;color:#B4B3AC}
   .step .t{font-size:13.5px;line-height:1.75;color:var(--ink-2)}
   .step .t b{display:block;margin-bottom:1px;font-size:14px;font-weight:500;color:var(--ink)}
+  .sub-h{margin:22px 0 10px;padding-top:18px;border-top:1px solid var(--line);font-size:12px;letter-spacing:.06em;color:var(--ink-3)}
+  .mini{margin:0;padding-left:18px;font-size:13px;line-height:1.9;color:var(--ink-2)}
+  .mini li{margin-bottom:2px}
+  .mini code{font-family:var(--mono);font-size:11.5px;background:#F7F6F3;border:1px solid var(--line);border-radius:5px;padding:1px 5px;color:#4E4D48}
   .sheet .note{margin:20px 0 0;font-size:11.5px;color:#B4B3AC}
   .close{
     position:absolute;top:14px;right:14px;width:30px;height:30px;
@@ -160,6 +164,14 @@ https://github.com/Ljh15224052032/zjutai-brand
       <span class="n">03</span>
       <div class="t"><b>上线</b>把预览地址发回群里，负责人点 Approve，一分钟内自动发布。</div>
     </div>
+
+    <div class="sub-h">具体怎么点</div>
+    <ol class="mini">
+      <li>仓库里打开 <code>index.html</code>，点右上角铅笔图标。</li>
+      <li>改完拉到最下面，选 <code>Create a new branch for this commit</code>，点 Propose changes。</li>
+      <li>下一屏点 <code>Create pull request</code>。</li>
+      <li>等一两分钟，PR 页面里会挂出预览地址，复制它发群里。</li>
+    </ol>
 
     <p class="note">完整规矩写在仓库的 CONTRIBUTING.md。</p>
   </div>
