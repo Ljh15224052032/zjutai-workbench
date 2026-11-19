@@ -25,19 +25,19 @@ index.html    单页，零依赖，双击即看；4.7 KB
 
 ## 放出去
 
-已上线：**https://brand.zjutai.cn**（Cloudflare Pages，项目 `zjut-brand`，静态，不占服务器）
+已上线：**https://brand.zjutai.cn**（Cloudflare Pages，项目 `zjut-brand-site`，连 GitHub 仓库自动构建，不占服务器）
 
-重新部署（本机 wrangler 在官网项目里）：
+发布方式已经改成 Git 驱动，**不再手动 wrangler 上传**：
 
-```bash
-node D:/Code-Rebuild/1-projects/ZJUTAI-官网/tools/node_modules/wrangler/bin/wrangler.js \
-  pages deploy D:/Code-Rebuild/1-projects/zjutai-workbench \
-  --project-name=zjut-brand --branch=main
-```
+| 动作 | 结果 |
+| :--- | :--- |
+| 推送到 `main`（或合并 PR） | 自动构建上线，约 1 分钟 |
+| 推一个分支 / 开 PR | Cloudflare 自动生成预览地址，并评论在这个 PR 里 |
 
-需要环境变量 `CLOUDFLARE_API_TOKEN`（见 `D:\AI-task\API密钥.md` 的 Cloudflare 一节）和 `CLOUDFLARE_ACCOUNT_ID`。
+仓库：`git@github.com:Ljh15224052032/zjutai-workbench.git`
+`main` 开了分支保护：必须走 PR + 1 个 approve，不能直接推。
 
-坑：用 API 绑定自定义域时，**Cloudflare 不会自动建 DNS**，要手动加一条 CNAME `brand → zjut-brand.pages.dev`（开代理），否则域一直卡在 pending。
+坑：用 API 绑自定义域时，**Cloudflare 不会自动建 DNS**，要手动加 CNAME `brand → zjut-brand-site.pages.dev`（开代理），否则一直卡 pending；同一个域要从旧项目解绑后才能绑到新项目。
 
 **不要部署到 `8.217.72.150`**：个人博客机，不对外给宣传部用。
 
